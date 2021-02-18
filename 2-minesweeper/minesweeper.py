@@ -1,5 +1,7 @@
 import itertools
 import random
+import copy
+from typing import TYPE_CHECKING
 
 
 class Minesweeper():
@@ -105,27 +107,36 @@ class Sentence():
         """
         Returns the set of all cells in self.cells known to be mines.
         """
-        raise NotImplementedError
+        if len(self.cells) == self.count:
+            return copy.deepcopy(self.cells)
+        
+        return None
 
     def known_safes(self):
         """
         Returns the set of all cells in self.cells known to be safe.
         """
-        raise NotImplementedError
+        if self.count == 0:
+            return copy.deepcopy(self.cells)
+
+        return None
 
     def mark_mine(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        raise NotImplementedError
+        if cell in self.cells:
+            self.cells.discard(cell)
+            self.count -= 1   
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        raise NotImplementedError
+        if cell in self.cells:
+            self.cells.discard(cell)
 
 
 class MinesweeperAI():
@@ -182,7 +193,36 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        raise NotImplementedError
+
+        # 1 & 2
+        self.moves_made.add(cell)
+        self.mark_safe(cell)
+
+        # 3
+        surrounding_cells = self.get_surrounding_cells(cell)
+        sentence = Sentence(surrounding_cells, count)
+        self.knowledge.append(sentence)
+        
+        # 4
+        for s in self.knowledge:
+            known_mines = s.known_mines()
+            known_safes = s.known_safes()
+
+            if known_mines:
+                for mineCell in known_mines:
+                    self.mark_mine(mineCell)
+            
+            if known_safes:
+                for safeCell in known_safes:
+                    self.mark_safe(safeCell)
+
+        # 5
+        for i, s1 in enumerate(self.knowledge):
+            for j, s2 in enumerate(self.knowledge):
+                if s1.cells in s2.cells and i != j:
+                    newSentence = Sentence(set(s2.cells - s1.cells), s2.count - s1.count)
+                    self.knowledge.append(newSentence)
+        
 
     def make_safe_move(self):
         """
@@ -193,7 +233,13 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        
+        if self.safes:
+            for safe in self.safes:
+                if safe not in self.moves_made:
+                    return copy.deepcopy(safe)
+        
+        return None
 
     def make_random_move(self):
         """
@@ -202,4 +248,34 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+
+        if not self.moves_made:
+            return (random.randint(0, self.height - 1), random.randint(0, self.width - 1))
+
+        allCells = self.get_all_cells()
+        uncertianCells = (allCells - self.moves_made) - self.mines
+
+        try:
+            return uncertianCells.pop()
+        except Exception:
+            print("NO UNCERTAIN CELLS")
+            return None
+
+    def get_all_cells(self):
+        allCells = set()
+        for i in range(0, self.height):
+            for j in range (0, self.width):
+                allCells.add((i, j))
+        return allCells
+
+    def get_surrounding_cells(self, cell):
+        surrounding_cells = set()
+
+        for i in range(0, 3):
+            for j in range(0, 3):
+                y = i + cell[0] - 1
+                x = j + cell[1] - 1
+                if x >= 0 and x < self.width and y >= 0 and y < self.height and (y, x) != cell and (y, x) not in self.moves_made:
+                    surrounding_cells.add((y,x))
+                
+        return surrounding_cells
