@@ -5,11 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Generate.py",
+            "name": "generate words0",
             "type": "python",
             "request": "launch",
             "program": "generate.py",
-            "args": ["data/structure1.txt", "data/words1.txt", "output.png"],
+            "args": ["data/structure0.txt", "data/words0.txt", "output0.png"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "generate words1",
+            "type": "python",
+            "request": "launch",
+            "program": "generate.py",
+            "args": ["data/structure1.txt", "data/words1.txt", "output1.png"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "generate words2",
+            "type": "python",
+            "request": "launch",
+            "program": "generate.py",
+            "args": ["data/structure2.txt", "data/words2.txt", "output2.png"],
             "console": "integratedTerminal"
         },
         {
