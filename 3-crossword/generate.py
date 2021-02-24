@@ -90,8 +90,8 @@ class CrosswordCreator():
         """
         Enforce node and arc consistency, and then solve the CSP.
         """
-        self.enforce_node_consistency()
-        self.ac3()
+        # self.enforce_node_consistency()
+        # self.ac3()
         return self.backtrack(dict())
 
     def enforce_node_consistency(self):
@@ -185,6 +185,10 @@ class CrosswordCreator():
         puzzle without conflicting characters); return False otherwise.
         """
 
+        for var in assignment:
+            if var.length != len(assignment[var]):
+                return False
+
         for (x, y) in self.crossword.overlaps:
             if self.crossword.overlaps[(x, y)] and x in assignment and y in assignment:
                 cors = self.crossword.overlaps[(x, y)]
@@ -208,8 +212,9 @@ class CrosswordCreator():
             for neighbor in unassigned_neighbors:
                 for n_word in self.domains[neighbor]:
                     cors = self.crossword.overlaps[(var, neighbor)]
-                    if word[cors[0]] != n_word[cors[1]]:
-                        word_cost[i][1] += 1
+                    if len(word) > cors[0] and len(n_word) > cors[1]:
+                        if word[cors[0]] != n_word[cors[1]]:
+                            word_cost[i][1] += 1
 
         # var_words = list(sorted(word_cost, key=lambda word: word_cost[word]))
         sorted_word_cost = sorted(word_cost, key=lambda word: word[1])
