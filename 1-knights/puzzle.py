@@ -50,7 +50,7 @@ knowledge2 = And(
     And(Or(BKnight, BKnave), Not(And(BKnight, BKnave))), # XOR
 
     Biconditional(AKnight, Or(ABKnight, ABKnave)),  # A is a Knight if and only if Both are Knights or if Both are Knaves
-    Biconditional(BKnight, Or( # B is a Knight if and only if they are the different from eachother
+    Biconditional(BKnight, Or( # B is a Knight if and only if they are different from eachother
             And(AKnight, Not(BKnight)),
             And(AKnave, Not(BKnave))
         )
