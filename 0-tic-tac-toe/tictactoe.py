@@ -9,6 +9,11 @@ X = "X"
 O = "O"
 EMPTY = None
 
+BASIC_MINIMAX = False
+
+number_of_calls_to_max_value = 0
+number_of_calls_to_min_value = 0
+
 
 def initial_state():
     """
@@ -121,15 +126,21 @@ def utility(board):
     else:
         return 0
 
-
 def minimax(board):
+    if BASIC_MINIMAX:
+        return minimax_basic(board)
+    else:
+        return minimax_alpha_beta(board)
+
+
+def minimax_basic(board):
     """
     Returns the optimal action for the current player on the board.
     """
     if terminal(board):
         return None
 
-    if player(board) == X:
+    if player(board) == X: # Max player
         best_value = -math.inf
         optimal_action = None
         for action in actions(board):
@@ -138,7 +149,7 @@ def minimax(board):
                 best_value = max
                 optimal_action = action
         return optimal_action
-    elif player(board) == O:
+    elif player(board) == O:    # Min player
         best_value = math.inf
         optimal_action = None
         for action in actions(board):
@@ -148,8 +159,10 @@ def minimax(board):
                 optimal_action = action
         return optimal_action
 
-
 def min_value(board):
+    global number_of_calls_to_min_value
+    number_of_calls_to_min_value += 1
+
     if terminal(board):
         return utility(board)
 
@@ -159,8 +172,10 @@ def min_value(board):
     
     return min_v
 
-
 def max_value(board):
+    global number_of_calls_to_max_value
+    number_of_calls_to_max_value += 1
+
     if terminal(board):
         return utility(board)
 
@@ -169,3 +184,65 @@ def max_value(board):
         max_v = max(max_v, min_value(result(board, action)))
     
     return max_v
+
+
+def minimax_alpha_beta(board):
+    """
+    Returns the optimal action for the current player on the board.
+    """
+
+    if terminal(board):
+        return None
+
+    if player(board) == X:
+        best_value = -math.inf
+        optimal_action = None
+        for action in actions(board):
+            max = min_value_alpha_beta(result(board, action), best_value)
+            if max > best_value:
+                best_value = max
+                optimal_action = action
+        return optimal_action
+    elif player(board) == O:
+        best_value = math.inf
+        optimal_action = None
+        for action in actions(board):
+            min = max_value_alpha_beta(result(board, action), best_value)
+            if min < best_value:
+                best_value = min
+                optimal_action = action
+        return optimal_action
+
+def min_value_alpha_beta(board, tmp_max):
+    global number_of_calls_to_min_value
+    number_of_calls_to_min_value += 1
+
+    if terminal(board):
+        return utility(board)
+
+    min_v = math.inf
+    for action in actions(board):
+        if min_v < tmp_max:
+            break
+        min_v = min(min_v, max_value_alpha_beta(result(board, action), min_v))
+    
+    return min_v
+
+def max_value_alpha_beta(board, tmp_min):
+    global number_of_calls_to_max_value
+    number_of_calls_to_max_value += 1
+
+    if terminal(board):
+        return utility(board)
+
+    max_v = -math.inf
+    for action in actions(board):
+        if max_v > tmp_min:
+            break
+        max_v = max(max_v, min_value_alpha_beta(result(board, action), max_v))
+    
+    return max_v
+
+def print_exec_stats():
+    print("Number of max_value calls:", number_of_calls_to_max_value)
+    print("Number of min_value calls:", number_of_calls_to_min_value)

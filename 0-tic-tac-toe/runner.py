@@ -99,6 +99,7 @@ while True:
                 title = f"Game Over: Tie."
             else:
                 title = f"Game Over: {winner} wins."
+            ttt.print_exec_stats() # Print statistics of current execution
         elif user == player:
             title = f"Play as {user}"
         else:
