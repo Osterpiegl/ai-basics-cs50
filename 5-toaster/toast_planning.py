@@ -345,7 +345,7 @@ def test(algorithm, start_state):
     print("\t in world time",state["time"])
 
 # execute the test for a few test cases
-ALGORITHM = 1 # 0=BFS, 1=A*(TODO), 2=oone, 3=greedy_bfs 4=greedy none stop
+ALGORITHM = 4 # 0=BFS, 1=A*(TODO), 2=oone, 3=greedy_bfs 4=greedy none stop
 
 
 test(ALGORITHM, state)
