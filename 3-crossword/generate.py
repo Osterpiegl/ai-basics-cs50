@@ -118,24 +118,26 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        revision = False
-        possible_var_pairs = []
-        for vars in self.crossword.overlaps:
-            if self.crossword.overlaps[vars] and vars[0] == x:
-                possible_var_pairs.append(vars)
-
-        for (x, y) in possible_var_pairs:
-            cors = self.crossword.overlaps[(x, y)]
+        revised = False
+        overlap = self.crossword.overlaps[(x, y)]
+        if overlap:
+            values_to_remove = []
             for x_word in self.domains[x]:
-                match = False
+                available_choice = False
                 for y_word in self.domains[y]:
-                    if x_word[cors[0]] == y_word[cors[1]]:
-                        match = True
-                if not match:
-                    self.domains[x].remove(x_word)
-                    revision = True
+                    if x_word[overlap[0]] == y_word[overlap[1]]:
+                        available_choice = True
+                        break
 
-        return revision
+                if not available_choice:
+                    values_to_remove.append(x_word)
+
+            if values_to_remove:
+                for value in values_to_remove:
+                    self.domains[x].remove(value)
+                revised = True
+
+        return revised
 
     def ac3(self, arcs=None):
         """
@@ -148,24 +150,23 @@ class CrosswordCreator():
         """
         queue = []
         if arcs == None:
-            for var in self.domains:
+            for var in self.crossword.variables:
                 neighbors = self.crossword.neighbors(var)
                 for n in neighbors:
                     queue.append((var, n))
         else:
             queue = arcs
 
-
         while queue:
             (x, y) = queue.pop(0)
-            if self.revise(x,y):
+            if self.revise(x, y):
                 if len(self.domains[x]) == 0:
                     return False
 
                 for neighbor in self.crossword.neighbors(x):
                     if neighbor != y:
                         queue.append((x, neighbor))
-        
+
         return True
 
     def assignment_complete(self, assignment):
@@ -198,7 +199,7 @@ class CrosswordCreator():
                 cors = self.crossword.overlaps[(x, y)]
                 if assignment[x][cors[0]] != assignment[y][cors[1]]:
                     return False
-            
+
         return True
 
     def order_domain_values(self, var, assignment):
@@ -208,11 +209,13 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        word_cost = []
 
+        unassigned_neighbors = list(filter(
+            lambda neighbor: neighbor not in assignment, self.crossword.neighbors(var)))
+
+        word_cost = []
         for i, word in enumerate(self.domains[var]):
             word_cost.append([word, 0])
-            unassigned_neighbors = list(filter(lambda neighbor: neighbor not in assignment , self.crossword.neighbors(var)))
             for neighbor in unassigned_neighbors:
                 for n_word in self.domains[neighbor]:
                     cors = self.crossword.overlaps[(var, neighbor)]
@@ -220,9 +223,8 @@ class CrosswordCreator():
                         if word[cors[0]] != n_word[cors[1]]:
                             word_cost[i][1] += 1
 
-        # var_words = list(sorted(word_cost, key=lambda word: word_cost[word]))
         sorted_word_cost = sorted(word_cost, key=lambda word: word[1])
-        ordered_domain_values = list(map(lambda word: word[0], sorted_word_cost))
+        ordered_domain_values = [word[0] for word in sorted_word_cost]
 
         return ordered_domain_values
 
@@ -235,10 +237,13 @@ class CrosswordCreator():
         return values.
         """
         all_variables = self.crossword.variables.copy()
-        unassigned_variables = list(filter(lambda var: var not in assignment, all_variables))
-        smallest_domain_variables = sorted(unassigned_variables, key=lambda x: (len(self.domains[x]), -len(self.crossword.neighbors(x))))
+        unassigned_variables = list(
+            filter(lambda var: var not in assignment, all_variables))
+        smallest_domain_variables = sorted(unassigned_variables, key=lambda x: (
+            len(self.domains[x]), -len(self.crossword.neighbors(x))))
 
-        unassigned_variable = smallest_domain_variables.pop(0) # With best heuristic value
+        unassigned_variable = smallest_domain_variables.pop(
+            0)  # With best heuristic value
         return unassigned_variable
 
     def backtrack(self, assignment):
